@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>British Money Counter</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Fredoka', cursive, sans-serif;
+        }
+        .dragging {
+            opacity: 0.4;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-200 via-purple-100 to-pink-200 h-screen overflow-hidden p-1 sm:p-2 flex flex-col items-center justify-center">
+
+    <div class="max-w-[84rem] w-full h-[98vh] bg-white rounded-3xl shadow-2xl overflow-hidden border-4 border-white p-3 sm:p-5 flex flex-col justify-between">
+
+        <!-- Game Content Body -->
+        <div id="game-body" class="flex flex-col h-full justify-between">
+            
+            <!-- Bank Zone / Question Header -->
+            <div 
+                id="bank-zone" 
+                class="p-2 sm:p-3 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center transition-colors"
+                ondragover="allowDrop(event)" 
+                ondrop="dropCoin(event, 'bank')"
+            >
+                <div id="question-counter" class="text-xs sm:text-sm font-bold text-blue-600 mb-0.5">Question 1/10</div>
+                <h2 class="text-lg sm:text-xl font-extrabold text-gray-700 mb-1 sm:mb-2 tracking-wide">How much money is there?</h2>
+                <div id="bank-coins" class="flex flex-wrap justify-center gap-2 sm:gap-3 min-h-[50px] sm:min-h-[60px] items-center">
+                    <!-- Dynamic Coins injected here -->
+                </div>
+            </div>
+
+            <!-- Sorting & Input Zones -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 my-1">
+                
+                <!-- Pounds -->
+                <div class="flex flex-col">
+                    <div 
+                        id="pounds-zone"
+                        class="bg-green-50 rounded-2xl border-3 border-green-300 p-2 sm:p-3 min-h-[90px] sm:min-h-[110px] flex flex-col items-center shadow-inner transition-colors"
+                        ondragover="allowDrop(event)"
+                        ondrop="dropCoin(event, 'pounds')"
+                    >
+                        <h3 class="text-base sm:text-lg font-bold text-green-700 mb-1">💷 Pounds</h3>
+                        <div id="pounds-coins" class="flex flex-wrap justify-center gap-2 min-h-[40px] items-center w-full">
+                            <span class="text-green-400 italic text-xs">Drop £ coins here</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-1.5 bg-green-100 p-2 sm:p-2.5 rounded-xl border border-green-200 shadow-sm">
+                        <label class="block text-green-800 font-bold mb-1 text-center text-xs sm:text-sm">Total pounds</label>
+                        <div class="relative max-w-[140px] mx-auto">
+                            <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-base font-bold text-gray-400">£</span>
+                            <input 
+                                type="text" 
+                                id="input-pounds"
+                                class="w-full text-center text-lg p-1.5 pl-7 border-2 border-green-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-200 font-bold bg-white shadow-inner"
+                            >
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pence -->
+                <div class="flex flex-col">
+                    <div 
+                        id="pence-zone"
+                        class="bg-orange-50 rounded-2xl border-3 border-orange-300 p-2 sm:p-3 min-h-[90px] sm:min-h-[110px] flex flex-col items-center shadow-inner transition-colors"
+                        ondragover="allowDrop(event)"
+                        ondrop="dropCoin(event, 'pence')"
+                    >
+                        <h3 class="text-base sm:text-lg font-bold text-orange-700 mb-1">🪙 Pence</h3>
+                        <div id="pence-coins" class="flex flex-wrap justify-center gap-2 min-h-[40px] items-center w-full">
+                            <span class="text-orange-400 italic text-xs">Drop p coins here</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-1.5 bg-orange-100 p-2 sm:p-2.5 rounded-xl border border-orange-200 shadow-sm">
+                        <label class="block text-orange-800 font-bold mb-1 text-center text-xs sm:text-sm">Total pence</label>
+                        <div class="flex items-center justify-center gap-1.5 sm:gap-2 flex-wrap">
+                            <input 
+                                type="text" 
+                                id="input-pence-1"
+                                class="w-24 text-center text-lg p-1.5 border-2 border-orange-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-200 font-bold bg-white shadow-inner"
+                            >
+                            <span class="text-base font-extrabold text-orange-800">p =</span>
+                            <span class="text-base font-extrabold text-orange-800">£</span>
+                            <input 
+                                type="text" 
+                                id="input-pence-2"
+                                class="w-24 text-center text-lg p-1.5 border-2 border-orange-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-200 font-bold bg-white shadow-inner"
+                            >
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Grand Total Area -->
+            <div class="max-w-xs mx-auto w-full bg-gray-50 p-2 sm:p-2.5 rounded-2xl border-2 border-gray-200 shadow-sm">
+                <label class="block text-gray-700 font-extrabold mb-1 text-center text-xs uppercase tracking-wider">Grand Total of All Coins:</label>
+                <div class="relative max-w-[160px] mx-auto">
+                    <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-lg font-bold text-gray-400">£</span>
+                    <input 
+                        type="text" 
+                        id="input-grand-total"
+                        class="w-full text-center text-lg sm:text-xl p-1.5 pl-7 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-200 font-bold bg-white shadow-inner"
+                    >
+                </div>
+            </div>
+
+            <!-- Feedback Banner -->
+            <div id="feedback-banner" class="hidden p-2 rounded-xl text-center text-sm font-bold shadow-md"></div>
+
+            <!-- Action Buttons -->
+            <div class="text-center pb-0.5">
+                <button 
+                    id="action-btn"
+                    onclick="handleActionButton()"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-8 rounded-full text-lg transition-transform transform hover:scale-105 shadow-lg cursor-pointer"
+                >
+                    Check Answer!
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const COIN_TYPES = [
+            { type: 'pence', value: 1, name: '1p', image: '1p.png' },
+            { type: 'pence', value: 2, name: '2p', image: '2p.png' },
+            { type: 'pence', value: 5, name: '5p', image: '5p.png' },
+            { type: 'pence', value: 10, name: '10p', image: '10p.png' },
+            { type: 'pence', value: 20, name: '20p', image: '20p.png' },
+            { type: 'pence', value: 50, name: '50p', image: '50p.png' },
+            { type: 'pound', value: 1, name: '£1', image: '1gbp.png' },
+            { type: 'pound', value: 2, name: '£2', image: '2gbp.png' }
+        ];
+
+        let questions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let currentCoinsState = [];
+        let isAnswerChecked = false;
+
+        function generateQuestions() {
+            const generated = [];
+            for (let i = 0; i < 10; i++) {
+                let coins = [];
+                let totalValue = 0;
+
+                while (true) {
+                    coins = [];
+                    totalValue = 0;
+                    for (let c = 0; c < 6; c++) {
+                        const randomCoin = COIN_TYPES[Math.floor(Math.random() * COIN_TYPES.length)];
+                        coins.push({
+                            id: Math.random().toString(36).substring(2, 9),
+                            ...randomCoin,
+                            location: 'bank'
+                        });
+                        if (randomCoin.type === 'pence') {
+                            totalValue += randomCoin.value;
+                        } else {
+                            totalValue += randomCoin.value * 100;
+                        }
+                    }
+                    // Ensure total amount is at least 10p (£0.10)
+                    if (totalValue >= 10) break;
+                }
+                generated.push(coins);
+            }
+            return generated;
+        }
+
+        function initGame() {
+            questions = generateQuestions();
+            currentQuestionIndex = 0;
+            score = 0;
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            isAnswerChecked = false;
+            const qCoins = questions[currentQuestionIndex];
+            
+            document.getElementById('question-counter').innerText = `Question ${currentQuestionIndex + 1}/10`;
+
+            currentCoinsState = qCoins.map(coin => ({ ...coin, location: 'bank' }));
+            
+            document.getElementById('input-pounds').value = '';
+            document.getElementById('input-pence-1').value = '';
+            document.getElementById('input-pence-2').value = '';
+            document.getElementById('input-grand-total').value = '';
+            document.getElementById('input-pounds').disabled = false;
+            document.getElementById('input-pence-1').disabled = false;
+            document.getElementById('input-pence-2').disabled = false;
+            document.getElementById('input-grand-total').disabled = false;
+
+            const feedback = document.getElementById('feedback-banner');
+            feedback.classList.add('hidden');
+            feedback.className = 'hidden p-2 rounded-xl text-center text-sm font-bold shadow-md';
+
+            const btn = document.getElementById('action-btn');
+            btn.innerText = "Check Answer!";
+            btn.className = "bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-8 rounded-full text-lg transition-transform transform hover:scale-105 shadow-lg cursor-pointer";
+
+            renderCoins();
+        }
+
+        function renderCoins() {
+            const bankContainer = document.getElementById('bank-coins');
+            const poundsContainer = document.getElementById('pounds-coins');
+            const penceContainer = document.getElementById('pence-coins');
+
+            bankContainer.innerHTML = '';
+            poundsContainer.innerHTML = '';
+            penceContainer.innerHTML = '';
+
+            let bankCount = 0, poundsCount = 0, penceCount = 0;
+
+            currentCoinsState.forEach(coin => {
+                const coinEl = document.createElement('div');
+                coinEl.className = `cursor-grab active:cursor-grabbing hover:scale-110 transition-transform ${isAnswerChecked ? 'opacity-60 cursor-not-allowed' : ''}`;
+                coinEl.draggable = !isAnswerChecked;
+                coinEl.dataset.id = coin.id;
+                
+                coinEl.innerHTML = `<img src="${coin.image}" alt="${coin.name}" class="w-12 h-12 sm:w-14 sm:h-14 object-contain pointer-events-none drop-shadow-md">`;
+                
+                coinEl.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', coin.id);
+                });
+
+                coinEl.addEventListener('click', () => {
+                    if (isAnswerChecked) return;
+                    if (coin.location === 'bank') {
+                        coin.location = coin.type === 'pound' ? 'pounds' : 'pence';
+                    } else {
+                        coin.location = 'bank';
+                    }
+                    renderCoins();
+                });
+
+                if (coin.location === 'bank') {
+                    bankContainer.appendChild(coinEl);
+                    bankCount++;
+                } else if (coin.location === 'pounds') {
+                    poundsContainer.appendChild(coinEl);
+                    poundsCount++;
+                } else if (coin.location === 'pence') {
+                    penceContainer.appendChild(coinEl);
+                    penceCount++;
+                }
+            });
+
+            if (bankCount === 0) bankContainer.innerHTML = '<span class="text-gray-400 italic text-xs">All coins sorted!</span>';
+            if (poundsCount === 0) poundsContainer.innerHTML = '<span class="text-green-400 italic text-xs">Drop £ coins here</span>';
+            if (penceCount === 0) penceContainer.innerHTML = '<span class="text-orange-400 italic text-xs">Drop p coins here</span>';
+        }
+
+        function allowDrop(ev) {
+            ev.preventDefault();
+        }
+
+        function dropCoin(ev, targetLocation) {
+            ev.preventDefault();
+            if (isAnswerChecked) return;
+            const coinId = ev.dataTransfer.getData('text/plain');
+            const coin = currentCoinsState.find(c => c.id === coinId);
+            if (coin) {
+                coin.location = targetLocation;
+                renderCoins();
+            }
+        }
+
+        function handleActionButton() {
+            const btn = document.getElementById('action-btn');
+            
+            if (isAnswerChecked) {
+                currentQuestionIndex++;
+                if (currentQuestionIndex >= 10) {
+                    showCompletionScreen();
+                } else {
+                    loadQuestion();
+                }
+                return;
+            }
+
+            const unSorted = currentCoinsState.filter(c => c.location === 'bank');
+            if (unSorted.length > 0) {
+                showFeedback("Please sort all coins into Pounds and Pence first!", "error");
+                return;
+            }
+
+            const badPounds = currentCoinsState.filter(c => c.location === 'pounds' && c.type !== 'pound');
+            const badPence = currentCoinsState.filter(c => c.location === 'pence' && c.type !== 'pence');
+            if (badPounds.length > 0 || badPence.length > 0) {
+                showFeedback("Oops! Some coins are in the wrong place. Check your sorting!", "error");
+                return;
+            }
+
+            const truePounds = currentCoinsState.filter(c => c.type === 'pound').reduce((a, b) => a + b.value, 0);
+            const truePence = currentCoinsState.filter(c => c.type === 'pence').reduce((a, b) => a + b.value, 0);
+
+            const parseNum = (val) => {
+                if (!val || val.trim() === '') return NaN;
+                return parseFloat(val.replace(/[^0-9.]/g, ''));
+            };
+
+            const userPounds = parseNum(document.getElementById('input-pounds').value);
+            const userPence1 = parseNum(document.getElementById('input-pence-1').value);
+            const userPence2 = parseNum(document.getElementById('input-pence-2').value);
+            const userGrand = parseNum(document.getElementById('input-grand-total').value);
+
+            if (isNaN(userPounds) || userPounds !== truePounds) {
+                showFeedback("Check your Total pounds amount again!", "error");
+                return;
+            }
+
+            if (isNaN(userPence1) || userPence1 !== truePence) {
+                showFeedback("Check your Total pence amount again!", "error");
+                return;
+            }
+
+            const expectedPence2 = parseFloat((truePence / 100).toFixed(2));
+            if (isNaN(userPence2) || userPence2 !== expectedPence2) {
+                showFeedback("Check your decimal pence amount (£) again!", "error");
+                return;
+            }
+
+            const expectedGrand = parseFloat((truePounds + (truePence / 100)).toFixed(2));
+            if (isNaN(userGrand) || userGrand !== expectedGrand) {
+                showFeedback("Check your Grand Total amount again!", "error");
+                return;
+            }
+
+            isAnswerChecked = true;
+            score++;
+            showFeedback("🎉 Brilliant job! That's completely correct!", "success");
+
+            document.getElementById('input-pounds').disabled = true;
+            document.getElementById('input-pence-1').disabled = true;
+            document.getElementById('input-pence-2').disabled = true;
+            document.getElementById('input-grand-total').disabled = true;
+
+            btn.innerText = currentQuestionIndex === 9 ? "View Final Results 🏆" : "Next Question ➡️";
+            btn.className = "bg-green-500 hover:bg-green-600 text-white font-bold py-2.5 px-8 rounded-full text-lg transition-transform transform hover:scale-105 shadow-lg animate-bounce cursor-pointer";
+            renderCoins();
+        }
+
+        function showFeedback(message, type) {
+            const banner = document.getElementById('feedback-banner');
+            banner.classList.remove('hidden');
+            if (type === 'error') {
+                banner.className = "p-2 rounded-xl text-center text-sm font-bold shadow-md bg-red-100 text-red-700 border-2 border-red-300";
+            } else {
+                banner.className = "p-2 rounded-xl text-center text-sm font-bold shadow-md bg-green-100 text-green-700 border-2 border-green-300 animate-pulse";
+            }
+            banner.innerText = message;
+        }
+
+        function showCompletionScreen() {
+            const body = document.getElementById('game-body');
+            body.innerHTML = `
+                <div class="text-center py-10 space-y-4">
+                    <h2 class="text-3xl font-extrabold text-blue-600 animate-bounce">🏆 Amazing Work! 🏆</h2>
+                    <p class="text-lg text-gray-700">You successfully completed all 10 money counting challenges!</p>
+                    <div class="pt-2">
+                        <button 
+                            onclick="initGame()"
+                            class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-10 rounded-full text-xl transition-transform transform hover:scale-105 shadow-lg cursor-pointer"
+                        >
+                            Play Again! 🔄
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        window.onload = initGame;
+    </script>
+</body>
+</html>
